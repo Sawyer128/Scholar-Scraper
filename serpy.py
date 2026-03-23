@@ -44,18 +44,22 @@ def search(query_term):
 
     print("Searched!")
 
-    title = results["organic_results"][0].get("title", "Empty")
-    citation_count = int(results["organic_results"][0]["inline_links"]["cited_by"].get("total", "0"))
+    title = results["organic_results"][0].get("title", None)
+    cited_by = results["organic_results"][0]["inline_links"].get("cited_by", None)
+    citation_count = None
+    cited_serplink = None
+    if cited_by:
+        citation_count = int(results["organic_results"][0]["inline_links"]["cited_by"].get("total", "0"))
+        cited_serplink = results["organic_results"][0]["inline_links"]["cited_by"].get("serpapi_scholar_link", "Empty")
     article_link = results["organic_results"][0].get("link", "Empty")
-    authors = results["organic_results"][0]["publication_info"].get("Authors", "Empty")
-    cited_serplink = results["organic_results"][0]["inline_links"]["cited_by"].get("serpapi_scholar_link", "Empty")
+    authors = results["organic_results"][0]["publication_info"].get("authors", "Empty")
 
     details = [title, article_link, authors, citation_count]
 
     #print(citation_count, article_link, title, authors, cited_serplink)
 
 
-    if title:
+    if title and cited_serplink:
         if (score := fuzz.ratio(query_term, title)) > 85:
             print("Found: score " + str(score))
             return findCiting(cited_serplink, citation_count), details
@@ -63,7 +67,7 @@ def search(query_term):
             print("Failed: score " + str(score))
             return None, details
     else:
-        print("Failed: No results!")
+        print("Failed: No results or no link!")
         return None, None
 
 def readwrite(input_file: str):
