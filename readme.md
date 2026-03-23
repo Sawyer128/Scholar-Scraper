@@ -1,6 +1,4 @@
 # Scholar-Scraper
-
----
 ![WHAT?!](https://img.shields.io/badge/buildings-falling-red) ![Freind me its: JK!](https://img.shields.io/badge/roblox-playing-indigo) ![let me know if you want some!](https://img.shields.io/badge/money-earning-dark)
 
 ## Hello
