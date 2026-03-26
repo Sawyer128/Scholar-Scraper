@@ -18,6 +18,7 @@ def findCiting(link: str, count: int):
     cited_list = requests.get(KEY_lnk).json()
     looping_list = cited_list
     for i in range(count):
+        print("Finding Citation " + str(i))
         if ( i % 10 ) == 0 and i != 0:
             looping_link = looping_list["serpapi_pagination"]["next"]
             KEY_ll = looping_link + "&api_key=" + API_KEY
@@ -67,10 +68,10 @@ def search(query_term: str, n: int):
             return findCiting(cited_serplink, citation_count), details
         else:
             print("Failed: score " + str(score))
-            return None, details
+            return None, None
     else:
-        print("Failed: No results or no link!")
-        return None, None
+        print("Failed: No results!")
+        return None, None#details if any(detail is not None for detail in details) else None, None
 
 def readwrite(input_file: str, read_count: tuple[int, int] | None = None):
     os.makedirs("output", exist_ok=True)
@@ -106,10 +107,7 @@ def readwrite(input_file: str, read_count: tuple[int, int] | None = None):
                 pass
                 json.dump(case_dict, case_file, indent=4)
 
-readwrite("titles.txt", (74, 99))
+readwrite("titles2.txt")
 
 #citation_count = 22
 #cited_serplink = "https://serpapi.com/search.json?as_sdt=400005&cites=18308769696422031659&engine=google_scholar&hl=en"
-
-
-
