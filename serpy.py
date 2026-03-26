@@ -35,7 +35,9 @@ def findCiting(link: str, count: int):
     else:
         return None
 
-def search(query_term):
+def search(query_term: str, n: int):
+
+    print("Attempting search number: " + str(n+1))
 
     results = client.search({
         "engine": "google_scholar",
@@ -70,34 +72,41 @@ def search(query_term):
         print("Failed: No results or no link!")
         return None, None
 
-def readwrite(input_file: str):
+def readwrite(input_file: str, read_count: tuple[int, int] | None = None):
     os.makedirs("output", exist_ok=True)
     case_number = str(random.randint(0, 999))
     print(case_number)
     with open(input_file, "r") as file:
         lines = file.readlines()
-        case_dict = {"Random Case Number": case_number, "Total Analyzed": len(lines), "Content": {}}
-        for line in lines:
+        lines_range = lines[read_count[0]:read_count[1]] if read_count else lines
+        case_dict = {"Random Case Number": case_number, "Total Analyzed": len(lines_range), "Content": {}}
+        for line in lines_range:
             stripped_line = line.strip()
             try:
-                line_citing, line_details = search(stripped_line)
-            except:
-                print("Search returned null!")
-            case_dict["Content"].update({
-                lines.index(line): {
-                    "Query": stripped_line,
-                    "Title": (line_details or [None])[0],
-                    "Link": (line_details or [None, None])[1],
-                    "Authors": (line_details or [None, None, None])[2],
-                    "Citation Count": (line_details or [None, None, None, None])[3],
-                    "Citing Articles": (line_citing or None)
-                },
-            })
+                line_citing, line_details = search(stripped_line, lines_range.index(line))
+                case_dict["Content"].update({
+                    lines.index(line): {
+                        "Query": stripped_line,
+                        "Title": (line_details or [None])[0],
+                        "Link": (line_details or [None, None])[1],
+                        "Authors": (line_details or [None, None, None])[2],
+                        "Citation Count": (line_details or [None, None, None, None])[3],
+                        "Citing Articles": (line_citing or None)
+                    },
+                })
+            except Exception as e:
+                case_dict["Content"].update({
+                    lines.index(line): {
+                        "Query": stripped_line,
+                        "Error": "Search could not be completed because " + str(e)
+                    },
+                })
+                print("Error: Search could not be completed because " + str(e))
             with open("output/report" + case_number + ".txt", "w") as case_file:
                 pass
                 json.dump(case_dict, case_file, indent=4)
 
-readwrite("titles.txt")
+readwrite("titles.txt", (74, 99))
 
 #citation_count = 22
 #cited_serplink = "https://serpapi.com/search.json?as_sdt=400005&cites=18308769696422031659&engine=google_scholar&hl=en"
