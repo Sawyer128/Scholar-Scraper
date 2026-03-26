@@ -71,6 +71,7 @@ def search(query_term):
         return None, None
 
 def readwrite(input_file: str):
+    os.makedirs("output", exist_ok=True)
     case_number = str(random.randint(0, 999))
     print(case_number)
     with open(input_file, "r") as file:
