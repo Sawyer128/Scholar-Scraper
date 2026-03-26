@@ -61,11 +61,12 @@ def search(query_term: str, n: int):
 
     #print(citation_count, article_link, title, authors, cited_serplink)
 
+    #case: found correct, but cited serplink is none because citation count is zero.
 
-    if title and cited_serplink:
+    if title:
         if (score := fuzz.ratio(query_term, title)) > 85:
             print("Found: score " + str(score))
-            return findCiting(cited_serplink, citation_count), details
+            return findCiting(cited_serplink, citation_count), details if cited_serplink else None, details
         else:
             print("Failed: score " + str(score))
             return None, None
@@ -88,10 +89,10 @@ def readwrite(input_file: str, read_count: tuple[int, int] | None = None):
                 case_dict["Content"].update({
                     lines.index(line): {
                         "Query": stripped_line,
-                        "Title": (line_details or [None])[0],
-                        "Link": (line_details or [None, None])[1],
-                        "Authors": (line_details or [None, None, None])[2],
-                        "Citation Count": (line_details or [None, None, None, None])[3],
+                        "Title": line_details[0],
+                        "Link": line_details[1],
+                        "Authors": line_details[2],
+                        "Citation Count": line_details[3],
                         "Citing Articles": (line_citing or None)
                     },
                 })
@@ -107,7 +108,7 @@ def readwrite(input_file: str, read_count: tuple[int, int] | None = None):
                 pass
                 json.dump(case_dict, case_file, indent=4)
 
-readwrite("titles2.txt")
+readwrite("titles1.txt")
 
 #citation_count = 22
 #cited_serplink = "https://serpapi.com/search.json?as_sdt=400005&cites=18308769696422031659&engine=google_scholar&hl=en"
