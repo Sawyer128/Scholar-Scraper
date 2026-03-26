@@ -47,12 +47,12 @@ def search(query_term: str, n: int):
 
     print("Searched!")
 
-    title = results["organic_results"][0].get("title", None)
-    cited_by = results["organic_results"][0]["inline_links"].get("cited_by", None)
-    citation_count = None
-    cited_serplink = None
-    if cited_by:
-        citation_count = int(results["organic_results"][0]["inline_links"]["cited_by"].get("total", "0"))
+    title = results["organic_results"][0].get("title", "Empty")
+    cited_by = results["organic_results"][0]["inline_links"].get("cited_by", "Empty")
+    citation_count = "0"
+    cited_serplink = "Empty"
+    if cited_by != "Empty":
+        citation_count = int(results["organic_results"][0]["inline_links"]["cited_by"].get("total", 0))
         cited_serplink = results["organic_results"][0]["inline_links"]["cited_by"].get("serpapi_scholar_link", "Empty")
     article_link = results["organic_results"][0].get("link", "Empty")
     authors = results["organic_results"][0]["publication_info"].get("authors", "Empty")
@@ -63,16 +63,20 @@ def search(query_term: str, n: int):
 
     #case: found correct, but cited serplink is none because citation count is zero.
 
-    if title:
+    if title != "Empty":
         if (score := fuzz.ratio(query_term, title)) > 85:
             print("Found: score " + str(score))
-            return findCiting(cited_serplink, citation_count), details if cited_serplink else None, details
+            if cited_serplink != "Empty":
+                print("Finding Citations...")
+                return findCiting(cited_serplink, citation_count), details
+            else:
+                return None, details
         else:
             print("Failed: score " + str(score))
-            return None, None
+            return None, [None, None, None, None]
     else:
-        print("Failed: No results!")
-        return None, None#details if any(detail is not None for detail in details) else None, None
+        print("Failed: No results! " + title)
+        return None, [None, None, None, None]#details if any(detail is not None for detail in details) else None, None
 
 def readwrite(input_file: str, read_count: tuple[int, int] | None = None):
     os.makedirs("output", exist_ok=True)
@@ -86,16 +90,24 @@ def readwrite(input_file: str, read_count: tuple[int, int] | None = None):
             stripped_line = line.strip()
             try:
                 line_citing, line_details = search(stripped_line, lines_range.index(line))
-                case_dict["Content"].update({
-                    lines.index(line): {
-                        "Query": stripped_line,
-                        "Title": line_details[0],
-                        "Link": line_details[1],
-                        "Authors": line_details[2],
-                        "Citation Count": line_details[3],
-                        "Citing Articles": (line_citing or None)
-                    },
-                })
+                if any(detail is None for detail in line_details):
+                    case_dict["Content"].update({
+                        lines.index(line): {
+                            "Query": stripped_line,
+                            "Error": "Search did not find a match."
+                        },
+                    })
+                else:
+                    case_dict["Content"].update({
+                        lines.index(line): {
+                            "Query": stripped_line,
+                            "Title": line_details[0],
+                            "Link": line_details[1],
+                            "Authors": line_details[2],
+                            "Citation Count": line_details[3],
+                            "Citing Articles": (line_citing or None)
+                        },
+                    })
             except Exception as e:
                 case_dict["Content"].update({
                     lines.index(line): {
@@ -104,11 +116,12 @@ def readwrite(input_file: str, read_count: tuple[int, int] | None = None):
                     },
                 })
                 print("Error: Search could not be completed because " + str(e))
+                #print(str(line_citing) + " " + str(line_details))
             with open("output/report" + case_number + ".txt", "w") as case_file:
                 pass
                 json.dump(case_dict, case_file, indent=4)
 
-readwrite("titles1.txt")
+readwrite("titles.txt", (74, 100))
 
 #citation_count = 22
 #cited_serplink = "https://serpapi.com/search.json?as_sdt=400005&cites=18308769696422031659&engine=google_scholar&hl=en"
