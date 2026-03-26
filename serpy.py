@@ -72,14 +72,16 @@ def search(query_term):
 
 def readwrite(input_file: str):
     case_number = str(random.randint(0, 999))
-    case_dict = {}
     print(case_number)
     with open(input_file, "r") as file:
         lines = file.readlines()
         case_dict = {"Random Case Number": case_number, "Total Analyzed": len(lines), "Content": {}}
         for line in lines:
             stripped_line = line.strip()
-            line_citing, line_details = search(stripped_line)
+            try:
+                line_citing, line_details = search(stripped_line)
+            except:
+                print("Search returned null!")
             case_dict["Content"].update({
                 lines.index(line): {
                     "Query": stripped_line,
@@ -87,11 +89,12 @@ def readwrite(input_file: str):
                     "Link": (line_details or [None, None])[1],
                     "Authors": (line_details or [None, None, None])[2],
                     "Citation Count": (line_details or [None, None, None, None])[3],
-                    "Citing Articles": line_citing
+                    "Citing Articles": (line_citing or None)
                 },
             })
-    with open("report" + case_number + ".txt", "w") as file:
-        json.dump(case_dict, file, indent=4)
+            with open("output/report" + case_number + ".txt", "w") as case_file:
+                pass
+                json.dump(case_dict, case_file, indent=4)
 
 readwrite("titles.txt")
 
